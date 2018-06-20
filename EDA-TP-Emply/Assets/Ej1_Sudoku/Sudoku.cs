@@ -10,8 +10,7 @@ public class Sudoku : MonoBehaviour {
 	public Text feedback;
 	public float stepDuration = 0.05f;
 	[Range(1, 82)]public int difficulty = 40;
-
-	Matrix<Cell> _board;
+ 	Matrix<Cell> _board;
 	Matrix<int> _createdMatrix;
     List<int> posibles = new List<int>();
 	int _smallSide;
@@ -85,12 +84,95 @@ public class Sudoku : MonoBehaviour {
     int watchdog = 0;
 
     //Tal vez modificar esto xd
-	bool RecuSolve(Matrix<int> matrixParent, int x, int y, int protectMaxDepth, List<Matrix<int>> solution)
-    {
-		return false;
-	}
+    //Aca tenes que resolver el sudoku al 100%, ydevolver el bool
+    //Esta es una recursion
+    //Luego de sacar esto, en solve tenes que usar stepdebugging
+    //El backtracking es para ver si puedo colocar un valor
+    //Si podes colocar el valor, ps haces otro hijo y si no, lo devolves atras y recalcula 
+    //Empezar con esto si o si
 
+    bool RecuSolve( Matrix<int> matrixParent, int x, int y, int protectMaxDepth, List<Matrix<int>> solution ) {
 
+        //Hay algo raro en esto 
+
+        //matrixparent es la matriz random la cual usas de base para hacer todo esto
+        //X e Y son los valores actuales de los ejes
+        //Protected max depth es el valor por el cual la matriz sabe que es su maximo, en un sudoku seria algo asi como 9 :3
+        //Solution.. ps aun no se, pero algo tiene que ver con nums y con la solucion :3
+
+        // Caso base
+
+        if ( x == protectMaxDepth ) {
+            if ( y == protectMaxDepth ) {
+                int r = Random.Range(0, protectMaxDepth) + 1;
+                if ( matrixParent [ x, y ] == 0 ) {
+                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
+                        matrixParent [ x, y ] = r;
+                        return true;
+                    } else {
+                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution);
+                    }
+                } else {
+                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            } else {
+                int r = Random.Range(0, protectMaxDepth) + 1;
+                if ( matrixParent [ x, y ] == 0 ) {
+                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
+                        matrixParent [ x, y ] = r;
+                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
+                    } else {
+                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution); 
+                    }
+                } else {
+                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
+                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }else {
+            if ( y == protectMaxDepth ) {
+                int r = Random.Range(0, protectMaxDepth) + 1;
+                if ( matrixParent [ x, y ] == 0 ) {
+                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
+                        matrixParent [ x, y ] = r;
+                        return RecuSolve(matrixParent, x + 1, 1, protectMaxDepth, solution);
+                    } else {
+                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution);
+                    }
+                } else {
+                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
+                        return RecuSolve(matrixParent, x + 1, 1, protectMaxDepth, solution);
+                    } else {
+                        return false;
+                    }
+                }
+            } else {
+                int r = Random.Range(0, protectMaxDepth) + 1;
+                if ( matrixParent [ x, y ] == 0 ) {
+                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
+                        matrixParent [ x, y ] = r;
+                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
+                    } else {
+                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution); //???
+                    }
+                } else {
+                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
+                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+        //Hay que hacer algo con el solution, pero :V
+    }
 
     void OnAudioFilterRead(float[] array, int channels)
     {
@@ -118,13 +200,12 @@ public class Sudoku : MonoBehaviour {
 
     //THIS, ACUERDATE
 	void Update () {
-		if(Input.GetKeyDown(KeyCode.R) || Input.GetMouseButtonDown(1))
+        if (Input.GetKeyDown(KeyCode.R) || Input.GetMouseButtonDown(1))
             SolvedSudoku();
-        else if(Input.GetKeyDown(KeyCode.C) || Input.GetMouseButtonDown(0)) 
+        else if (Input.GetKeyDown(KeyCode.C) || Input.GetMouseButtonDown(0))
             CreateSudoku();
 
-	
-	}
+    }
 
     void SolvedSudoku()
     {
@@ -152,16 +233,27 @@ public class Sudoku : MonoBehaviour {
         List<Matrix<int>> l = new List<Matrix<int>>();
         //Le cambia el valor a watchdog (?)
         watchdog = 100000;
-        //Genera una linea valida, 
-        GenerateValidLine(_createdMatrix, 0, 0);
-        var result =false;//??????
-        _createdMatrix = l[0].Clone();//??????
-        //Bloquear cells randon (??)
+
+        // Aca hay algo raro
+
+        //Genera una linea valida
+        GenerateValidLine(_createdMatrix, 0, 0);//que?
+        var result = RecuSolve(_createdMatrix, 0, 0, 9, l);
+        _createdMatrix = l[0].Clone();//??????                  //Algo asi como que tenes que generar sudokus hasta que tome el que va, o vas guardando 
+        /*
+         * siempre tenes que resolver el sudoku, osea todo lo que vos hagas aca tiene que 
+         * poderse resolver en un futuro.
+         * siempre result va a ser true al final de alguna u otra manera
+         */
+        //Bloquear cells randon (aca bloqueas, y despues las que no las borras mas adelante)(??)
         LockRandomCells();
-        //Limpia las desbloqueadas y le pasa una matriz
+        //Limpia las desbloqueadas (las que no bloqueaste en el anterior) y le pasa una matriz
         ClearUnlocked(_createdMatrix);
         //Pasa todas las variables que no estuvieron borradas por lo anterior xd 
         TranslateAllValues(_createdMatrix);
+
+        //Hasta aca
+
         //Crea un long :'v con el total de memoria
         long mem = System.GC.GetTotalMemory(true);
         //Calculos :v
@@ -173,13 +265,17 @@ public class Sudoku : MonoBehaviour {
     }
 
     //Genera una linea valida, dandole una matrix y dos valores
+    //Por que hay dos valores en x e y?
 	void GenerateValidLine(Matrix<int> mtx, int x, int y)
 	{
+        //Crea un aux
 		int[]aux = new int[9];
+        //Llena aux con valores de 1 a 9
 		for (int i = 0; i < 9; i++) 
 		{
 			aux [i] = i + 1;
 		}
+        //crea aux
 		int numAux = 0;
 		for (int j = 0; j < aux.Length; j++) 
 		{
