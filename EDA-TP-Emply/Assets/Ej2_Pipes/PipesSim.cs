@@ -100,6 +100,9 @@ public class PipesSim : MonoBehaviour
 
     void Start()
     {
+
+
+
 		//Rotamos una pizca luego de agregar todos los pipes
 		transform.Rotate(0f, 0f, -5f);
 	}

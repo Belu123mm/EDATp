@@ -53,6 +53,7 @@ public class Sudoku : MonoBehaviour {
     void ClearBoard() {
         //Limpia la lista de matrices
 		_createdMatrix = new Matrix<int>(_bigSide, _bigSide);
+        
         //Pone los valores de la board en 0 y valida todas las cells y las desbloquea
 		foreach(var cell in _board) {
 			cell.number = 0;
@@ -93,85 +94,81 @@ public class Sudoku : MonoBehaviour {
 
     bool RecuSolve( Matrix<int> matrixParent, int x, int y, int protectMaxDepth, List<Matrix<int>> solution ) {
 
-        //Hay algo raro en esto 
 
-        //matrixparent es la matriz random la cual usas de base para hacer todo esto
-        //X e Y son los valores actuales de los ejes
-        //Protected max depth es el valor por el cual la matriz sabe que es su maximo, en un sudoku seria algo asi como 9 :3
-        //Solution.. ps aun no se, pero algo tiene que ver con nums y con la solucion :3
+        //check
+        //cambiar
+        //avanzar
+        //Cuando este terminado watchdog va a ser 0..?
 
-        // Caso base
 
-        if ( x == protectMaxDepth ) {
-            if ( y == protectMaxDepth ) {
-                int r = Random.Range(0, protectMaxDepth) + 1;
-                if ( matrixParent [ x, y ] == 0 ) {
-                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
-                        matrixParent [ x, y ] = r;
-                        return true;
-                    } else {
-                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution);
-                    }
-                } else {
-                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
+        Matrix<int> clone = solution [ 0 ];
+        int value = clone [ x, y ];
+        if ( y == protectMaxDepth && x == protectMaxDepth ) {
+            bool check = CanPlaceValue(clone, value, x, y);
+            if ( check ) {
+                return true;
+            } else if ( value == protectMaxDepth ) {
+                return false;
             } else {
-                int r = Random.Range(0, protectMaxDepth) + 1;
-                if ( matrixParent [ x, y ] == 0 ) {
-                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
-                        matrixParent [ x, y ] = r;
-                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
-                    } else {
-                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution); 
-                    }
-                } else {
-                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
-                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
-                    } else {
-                        return false;
-                    }
-                }
-            }
-        }else {
-            if ( y == protectMaxDepth ) {
-                int r = Random.Range(0, protectMaxDepth) + 1;
-                if ( matrixParent [ x, y ] == 0 ) {
-                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
-                        matrixParent [ x, y ] = r;
-                        return RecuSolve(matrixParent, x + 1, 1, protectMaxDepth, solution);
-                    } else {
-                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution);
-                    }
-                } else {
-                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
-                        return RecuSolve(matrixParent, x + 1, 1, protectMaxDepth, solution);
-                    } else {
-                        return false;
-                    }
-                }
-            } else {
-                int r = Random.Range(0, protectMaxDepth) + 1;
-                if ( matrixParent [ x, y ] == 0 ) {
-                    if ( CanPlaceValue(matrixParent, r, x, y) ) {
-                        matrixParent [ x, y ] = r;
-                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
-                    } else {
-                        return RecuSolve(matrixParent, x, y, protectMaxDepth, solution); //???
-                    }
-                } else {
-                    if ( CanPlaceValue(matrixParent, matrixParent [ x, y ], x, y) ) {
-                        return RecuSolve(matrixParent, x, y + 1, protectMaxDepth, solution);
-                    } else {
-                        return false;
-                    }
-                }
+                value++;
+                clone [ x, y ] = value;
+                solution [ 0 ] = clone;
+                return RecuSolve(matrixParent, x, y, protectMaxDepth, solution);
             }
         }
-        //Hay que hacer algo con el solution, pero :V
+        int nextValue;
+        int preValue;
+        int newx;
+        int newy;
+        if ( y >= protectMaxDepth ) {
+
+            newx = x + 1;
+            newy = 1;
+        } else {
+            newx = x;
+            newy = y + 1;
+        }
+        if ( value == matrixParent [ x, y ] && matrixParent [ x,y] != 0)
+            return RecuSolve(matrixParent, newx, newy, protectMaxDepth, solution);
+
+        nextValue = clone [ newx, newy ];
+        while (nextValue != 0 ) {
+            int newnewx;
+            int newnewy;
+            if ( newy >= protectMaxDepth ) {
+
+                newnewx = newx + 1;
+                newnewy = 1;
+            } else {
+                newnewx = newx;
+                newnewy = newy + 1;
+            }
+            nextValue = clone [ newnewx, newnewy ];
+        }
+
+        //Sacar el valor de preValue
+        if ( y == 1 ) {
+            newx = x - 1;
+            newy = protectMaxDepth;
+        } else {
+            newx = x;
+            newy = y - 1;
+        }
+        if ()
+
+        return false;
+
+        //Tengo la sensacion de que tenes que ir agregando todo a solution y tomando siempre el ultimo
+
+            //Hay algo raro en esto 
+
+            //matrixparent es la matriz random la cual usas de base para hacer todo esto
+            //X e Y son los valores actuales de los ejes
+            //Protected max depth es el valor por el cual la matriz sabe que es su maximo, en un sudoku seria algo asi como 9 :3
+            //Solution.. ps aun no se, pero algo tiene que ver con nums y con la solucion :3
+
+            // Caso base
+            //Hay que hacer algo con el solution, pero :V
     }
 
     void OnAudioFilterRead(float[] array, int channels)
@@ -358,6 +355,8 @@ public class Sudoku : MonoBehaviour {
     //Hace calculos magicos y devuelve si podes meter el valor o no 
     bool CanPlaceValue(Matrix<int> mtx, int value, int x, int y)
     {
+        if ( value == 0 )
+            return false;
         //Pos los nombres lo dicen
         List<int> fila = new List<int>();
         List<int> columna = new List<int>();
