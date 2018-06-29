@@ -154,7 +154,7 @@ public class Sudoku : MonoBehaviour {
             newx = x;
             newy = y - 1;
         }
-        if ()
+      //  if ()
 
         return false;
 
