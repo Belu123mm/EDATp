@@ -75,7 +75,7 @@ public class PipesSim : MonoBehaviour
     Node RecuBuildDFS(int x, int y, Node prev = null, Direction comingFrom = Direction.Left)
     {
         //ancho y alto max...
-        if (x <= maxWidth || y >= maxHeight)
+        if (x >= maxWidth || y >= maxHeight)
             return prev;
         //un nodo x que tienen una cantidad N de vecinos..lo pense como el laberinto de IA I, por ahora en mi cabeza tiene sentido
         else
@@ -135,10 +135,10 @@ public class PipesSim : MonoBehaviour
 
         //muchos if y me sangran los ojos pero me sangra el cerebro tambien, se deberia hacer menos villa....
         //si las pos no estan ocupadas         
-        if (!PositionOccupied(x - 1, y))
+        if (!PositionOccupied(x + 1, y))
             //agrego la posible direccion en el sentido que corresponda :D
             possibleDir.Add(Direction.Right);
-        if (!PositionOccupied(x + 1, y))
+        if (!PositionOccupied(x - 1, y))
             possibleDir.Add(Direction.Left);
         if (!PositionOccupied(x, y + 1))
             possibleDir.Add(Direction.Top);
