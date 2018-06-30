@@ -5,16 +5,15 @@ using UnityEngine.UI;
 
 
 public class Sudoku : MonoBehaviour {
-	public Cell prefabCell;
-	public Canvas canvas;
-	public Text feedback;
-	public float stepDuration = 0.05f;
-	[Range(1, 82)]public int difficulty = 40;
- 	Matrix<Cell> _board;
-	Matrix<int> _createdMatrix;
-    List<int> posibles = new List<int>();
-	int _smallSide;
-	int _bigSide;
+    public Cell prefabCell;
+    public Canvas canvas;
+    public Text feedback;
+    public float stepDuration = 0.05f;
+    [Range(1, 82)] public int difficulty = 40;
+    Matrix<Cell> _board;
+    Matrix<int> _createdMatrix;
+    int _smallSide;
+    int _bigSide;
     string memory = "";
     string canSolve = "";
     bool canPlayMusic = false;
@@ -30,8 +29,7 @@ public class Sudoku : MonoBehaviour {
     float samplingF = 48000;
 
 
-    void Start()
-    {
+    void Start() {
         //Crea un long para sacar el valor de la memoria y calcs 
         long mem = System.GC.GetTotalMemory(true);
         //Cambia el texto de feedback
@@ -52,34 +50,34 @@ public class Sudoku : MonoBehaviour {
 
     void ClearBoard() {
         //Limpia la lista de matrices
-		_createdMatrix = new Matrix<int>(_bigSide, _bigSide);
-        
-        //Pone los valores de la board en 0 y valida todas las cells y las desbloquea
-		foreach(var cell in _board) {
-			cell.number = 0;
-			cell.locked = cell.invalid = false;
-		}
-	}
+        _createdMatrix = new Matrix<int>(_bigSide, _bigSide);
 
-	void CreateEmptyBoard() {
+        //Pone los valores de la board en 0 y valida todas las cells y las desbloquea
+        foreach ( var cell in _board ) {
+            cell.number = 0;
+            cell.locked = cell.invalid = false;
+        }
+    }
+
+    void CreateEmptyBoard() {
         //Setea el valor del espaciado entre las celdas
-		float spacing = 68f;
+        float spacing = 68f;
         //Valores magicos
-		float startX = -spacing * 4f;
-		float startY = spacing * 4f;
+        float startX = -spacing * 4f;
+        float startY = spacing * 4f;
 
         //Crea una nueva lista de celulas
-		_board = new Matrix<Cell>(_bigSide, _bigSide);
+        _board = new Matrix<Cell>(_bigSide, _bigSide);
         //Posiciona todas las celulas segun los valores de antes 
-		for(int x = 0; x<_board.width; x++) {
-			for(int y = 0; y<_board.height; y++) {
-                var cell = _board[x, y] = Instantiate(prefabCell);
-				cell.transform.SetParent(canvas.transform, false);
-				cell.transform.localPosition = new Vector3(startX + x * spacing, startY - y * spacing, 0);
-			}
-		}
-	}
-	
+        for ( int x = 0; x < _board.width; x++ ) {
+            for ( int y = 0; y < _board.height; y++ ) {
+                var cell = _board [ x, y ] = Instantiate(prefabCell);
+                cell.transform.SetParent(canvas.transform, false);
+                cell.transform.localPosition = new Vector3(startX + x * spacing, startY - y * spacing, 0);
+            }
+        }
+    }
+
 
 
     int watchdog = 0;
@@ -93,82 +91,59 @@ public class Sudoku : MonoBehaviour {
     //Empezar con esto si o si
 
     bool RecuSolve( Matrix<int> matrixParent, int x, int y, int protectMaxDepth, List<Matrix<int>> solution ) {
-
-
-        //check
-        //cambiar
-        //avanzar
-        //Cuando este terminado watchdog va a ser 0..?
-
-
-        Matrix<int> clone = solution [ 0 ];
-        int value = clone [ x, y ];
-        if ( y == protectMaxDepth && x == protectMaxDepth ) {
-            bool check = CanPlaceValue(clone, value, x, y);
-            if ( check ) {
+        Vector2Int next = ReturnNext(x, y, 8);
+        Matrix<int> clone = matrixParent;
+        if ( next == Vector2Int.zero ) {
+            if ( matrixParent [ x, y ] != 0 )
                 return true;
-            } else if ( value == protectMaxDepth ) {
-                return false;
-            } else {
-                value++;
+            foreach ( var value in values ) {
+
+                if ( CanPlaceValue(matrixParent, value, x, y) ) {
+                    clone [ x, y ] = value;
+                    solution.Add(clone);
+                    return true;
+
+                }
                 clone [ x, y ] = value;
-                solution [ 0 ] = clone;
-                return RecuSolve(matrixParent, x, y, protectMaxDepth, solution);
+                solution.Add(clone);
+                clone [ x, y ] = 0;
             }
         }
-        int nextValue;
-        int preValue;
-        int newx;
-        int newy;
-        if ( y >= protectMaxDepth ) {
-
-            newx = x + 1;
-            newy = 1;
-        } else {
-            newx = x;
-            newy = y + 1;
+        if ( matrixParent [ x, y ] != 0 ) {
+            return RecuSolve(clone, next.x, next.y, protectMaxDepth, solution);
         }
-        if ( value == matrixParent [ x, y ] && matrixParent [ x,y] != 0)
-            return RecuSolve(matrixParent, newx, newy, protectMaxDepth, solution);
+            foreach ( var value in values ) {
 
-        nextValue = clone [ newx, newy ];
-        while (nextValue != 0 ) {
-            int newnewx;
-            int newnewy;
-            if ( newy >= protectMaxDepth ) {
+            if ( CanPlaceValue(matrixParent, value, x, y) ) {
+                clone [ x, y ] = value;
+                solution.Add(clone);
+                if ( RecuSolve(clone, next.x, next.y, protectMaxDepth, solution) ) return true;
 
-                newnewx = newx + 1;
-                newnewy = 1;
-            } else {
-                newnewx = newx;
-                newnewy = newy + 1;
+
             }
-            nextValue = clone [ newnewx, newnewy ];
+            clone [ x, y ] = value;
+            solution.Add(clone);
+            clone [ x, y ] = 0;
         }
-
-        //Sacar el valor de preValue
-        if ( y == 1 ) {
-            newx = x - 1;
-            newy = protectMaxDepth;
-        } else {
-            newx = x;
-            newy = y - 1;
-        }
-      //  if ()
+        solution.Add(clone);
 
         return false;
 
-        //Tengo la sensacion de que tenes que ir agregando todo a solution y tomando siempre el ultimo
+    }
 
-            //Hay algo raro en esto 
+    int [] values = { 1, 2, 3, 4, 5, 6, 7, 8, 9}; 
 
-            //matrixparent es la matriz random la cual usas de base para hacer todo esto
-            //X e Y son los valores actuales de los ejes
-            //Protected max depth es el valor por el cual la matriz sabe que es su maximo, en un sudoku seria algo asi como 9 :3
-            //Solution.. ps aun no se, pero algo tiene que ver con nums y con la solucion :3
-
-            // Caso base
-            //Hay que hacer algo con el solution, pero :V
+    //Esta checkeado
+    Vector2Int ReturnNext(int x, int y, int maxValue ) {
+        int newy = y + 1;
+        int newx = x;
+        if (newy > maxValue ) {
+            newx++;
+            newy = 0;
+            if ( newx > maxValue )
+                return Vector2Int.zero;
+        }
+        return new Vector2Int(newx, newy);
     }
 
     void OnAudioFilterRead(float[] array, int channels)
@@ -192,7 +167,11 @@ public class Sudoku : MonoBehaviour {
 
 	IEnumerator ShowSequence(List<Matrix<int>> seq)
     {
-        yield return new WaitForSeconds(0);
+            print("hi");
+        foreach(var posibility in seq ) {
+            TranslateAllValues(posibility);     //Esto solo f unciona una vez por que pone los valores donde hay ceros y tipo xd lol
+            yield return new WaitForSeconds(10);
+        }
     }
 
     //THIS, ACUERDATE
@@ -206,11 +185,15 @@ public class Sudoku : MonoBehaviour {
 
     void SolvedSudoku()
     {
+        print("RESOLV");
         StopAllCoroutines();
         nums = new List<int>();
         var solution = new List<Matrix<int>>();
         watchdog = 100000;
-        var result =false;//????
+        var result = RecuSolve(_createdMatrix, 0, 0, 9, solution);
+        //Aca va la corutina 
+        print (solution.Count);
+        StartCoroutine(ShowSequence(solution));
         long mem = System.GC.GetTotalMemory(true);
         memory = string.Format("MEM: {0:f2}MB", mem / (1024f * 1024f));
         canSolve = result ? " VALID" : " INVALID";
@@ -230,18 +213,12 @@ public class Sudoku : MonoBehaviour {
         List<Matrix<int>> l = new List<Matrix<int>>();
         //Le cambia el valor a watchdog (?)
         watchdog = 100000;
-
-        // Aca hay algo raro
-
         //Genera una linea valida
-        GenerateValidLine(_createdMatrix, 0, 0);//que?
+        GenerateValidLine(_createdMatrix, 0, 0);
+        //ENtonces ahora createdMatrix tiene una linea valida
         var result = RecuSolve(_createdMatrix, 0, 0, 9, l);
-        _createdMatrix = l[0].Clone();//??????                  //Algo asi como que tenes que generar sudokus hasta que tome el que va, o vas guardando 
-        /*
-         * siempre tenes que resolver el sudoku, osea todo lo que vos hagas aca tiene que 
-         * poderse resolver en un futuro.
-         * siempre result va a ser true al final de alguna u otra manera
-         */
+
+        _createdMatrix = l [ l.Count - 1 ];
         //Bloquear cells randon (aca bloqueas, y despues las que no las borras mas adelante)(??)
         LockRandomCells();
         //Limpia las desbloqueadas (las que no bloqueaste en el anterior) y le pasa una matriz
@@ -353,10 +330,7 @@ public class Sudoku : MonoBehaviour {
 
 
     //Hace calculos magicos y devuelve si podes meter el valor o no 
-    bool CanPlaceValue(Matrix<int> mtx, int value, int x, int y)
-    {
-        if ( value == 0 )
-            return false;
+    bool CanPlaceValue( Matrix<int> mtx, int value, int x, int y ) {
         //Pos los nombres lo dicen
         List<int> fila = new List<int>();
         List<int> columna = new List<int>();
@@ -366,15 +340,13 @@ public class Sudoku : MonoBehaviour {
         Vector2 cuadrante = Vector2.zero;
 
         //Por cada fila enla matrix
-        for (int cv = 0; cv < mtx.height; cv++)
-        {
+        for ( int cv = 0; cv < mtx.height; cv++ ) {
             //Por cada columna en la matriz
-            for (int fv = 0; fv < mtx.width; fv++)
-            {
+            for ( int fv = 0; fv < mtx.width; fv++ ) {
                 //Si i es distinto a y y (xd) j es igual a x, agrega en la column 
-                if (cv != y && fv == x) columna.Add(mtx[fv, cv]);
+                if ( cv != y && fv == x ) columna.Add(mtx [ fv, cv ]);
                 //Y aca al reves xd 
-                else if(cv == y && fv != x) fila.Add(mtx[fv,cv]);
+                else if ( cv == y && fv != x ) fila.Add(mtx [ fv, cv ]);
                 //Osea que agrega todos los valores a la columna x exepto el de la fila y y al reves
                 //Y cual es agrega? Ps te respondo
                 //Agrega a columna o fila el valor de la matriz en esas coordenadas 
@@ -384,24 +356,24 @@ public class Sudoku : MonoBehaviour {
         }
 
         //Le contas en que cuadrante (del 3x3) esta el value 
-        cuadrante.x = (int)(x / 3); //(Pioruq e esta esto aqui anywys?)
+        cuadrante.x = (int) (x / 3); //(Pioruq e esta esto aqui anywys?)
 
-        if (x < 3)
-            cuadrante.x = 0;     
-        else if (x < 6)
+        if ( x < 3 )
+            cuadrante.x = 0;
+        else if ( x < 6 )
             cuadrante.x = 3;
         else
             cuadrante.x = 6;
         //Lo mismo pero con la y xd 
-        if (y < 3)
+        if ( y < 3 )
             cuadrante.y = 0;
-        else if (y < 6)
+        else if ( y < 6 )
             cuadrante.y = 3;
         else
             cuadrante.y = 6;
         //Da una lista de numeros tal que asi, 00,01,02,10,11,12,20,21,22 suiendo 00 los valores minimos y 22 los maximos (obviamente separados viste xd)
         //Y en este caso da todoslos valores en ese cuadrante ylos guarda en la lsta de area
-        area = mtx.GetRange((int)cuadrante.x, (int)cuadrante.y, (int)cuadrante.x + 3, (int)cuadrante.y + 3);
+        area = mtx.GetRange((int) cuadrante.x, (int) cuadrante.y, (int) cuadrante.x + 3, (int) cuadrante.y + 3);
         //Agrega todoslos valores que busco al total
         total.AddRange(fila);
         total.AddRange(columna);
@@ -410,7 +382,7 @@ public class Sudoku : MonoBehaviour {
         total = FilterZeros(total);
 
         //Checkea si en total esta el valor
-        if (total.Contains(value))
+        if ( total.Contains(value) )
             //Si esta, ps no podes agregarlo xd
             return false;
         else
