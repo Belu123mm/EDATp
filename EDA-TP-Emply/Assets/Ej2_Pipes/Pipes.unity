@@ -208,10 +208,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefabPipe: {fileID: 11439724, guid: 36dc10604e7a2be4f89f56e10d734c1b, type: 2}
   maxWidth: 24
-  maxHeight: 40
-  branchChance: 1
-  blockChance: 0.2
-  fillDelaySeconds: 0.01
+  maxHeight: 10
+  branchChance: 0.8
+  blockChance: 0.052
+  fillDelaySeconds: 0.1
   materialTears: {fileID: 2100000, guid: b2c4a1b2d9bcce049baf64e91bcb0633, type: 2}
   materialEmpty: {fileID: 2100000, guid: 1c3f26139bdbb394e973f6881d0bd767, type: 2}
   materialBlocked: {fileID: 2100000, guid: b9e6f1e4f9c28a2408b98278ea88b732, type: 2}

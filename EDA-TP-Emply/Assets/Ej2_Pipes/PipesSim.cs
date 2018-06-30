@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
-
-
 public class PipesSim : MonoBehaviour
 {
     public enum Content
@@ -21,7 +19,6 @@ public class PipesSim : MonoBehaviour
         public List<Node> neighbours = new List<Node>();
     };
 
-
     public Pipe prefabPipe;
     public int maxWidth, maxHeight;
     [Range(0.0f, 1.0f)]
@@ -35,7 +32,6 @@ public class PipesSim : MonoBehaviour
     public Material materialBlocked;
     public Material materialError;
     bool _filled = false; //estoparalacorrutina :3
-
 
     // Variables agregadas
     private Node _root;
@@ -52,7 +48,6 @@ public class PipesSim : MonoBehaviour
         if ((x > 0 && x < maxWidth) && (y > 0 && y < maxHeight)) return visited[x, y];
         return true;
     }
-
 
     //Creamos un nodo (esta función ya está completa)
     Node CreateNode(int x, int y)
@@ -80,10 +75,12 @@ public class PipesSim : MonoBehaviour
         //un nodo x que tienen una cantidad N de vecinos..lo pense como el laberinto de IA I, por ahora en mi cabeza tiene sentido
         else
         {
+            // print("recursion");
             //mi nodito actutal
             Node currentNode = CreateNode(x, y);
             if (prev != null)
                 currentNode.pipe.SetConnection(comingFrom, true);
+
             //el random del current 
             RandomBlock(currentNode);
 
@@ -101,9 +98,9 @@ public class PipesSim : MonoBehaviour
                     Direction dirToGo = possibleDirection[Random.Range(0, possibleDirection.Count)];
 
                     //si va para la izq....
+                    //agarro el vecito del current y le agrego la bonita recursion que ya funciona raro, pero funciona
+                    //en todas hace lo mismo solo que cambia la direccion :3 
                     if (dirToGo == Direction.Left)
-                        //agarro el vecito del current y le agrego la bonita recursion que NO FUNCIONA AAAANOENTIENDO
-                        //en todas hace lo mismo solo que cambia la direccion :3 
                         currentNode.neighbours.Add(RecuBuildDFS(x - 1, y, currentNode, Direction.Right));
                     else if (dirToGo == Direction.Right)
                         currentNode.neighbours.Add(RecuBuildDFS(x + 1, y, currentNode, Direction.Left));
@@ -114,16 +111,18 @@ public class PipesSim : MonoBehaviour
 
                     //yyy conecto :3 
                     currentNode.pipe.SetConnection(dirToGo, true);
-
                 }
             }
             return currentNode;
         }
     }
+
     // Obtiene la cantidad de ramas a dividir el nodo actual
     int RandomBranch(Node current)
     {
-        float randomBranch = Random.Range(0, 1);
+        float randomBranch = Random.Range(0f, 1f);
+
+        //  print("random branch" + randomBranch);
         //   if (randomBranch < (branchChance / 4))
         //mejor asi 
         return randomBranch < (branchChance / 4) ? 3 : randomBranch < (branchChance / 2) ? 2 : 1;
@@ -134,17 +133,15 @@ public class PipesSim : MonoBehaviour
         List<Direction> possibleDir = new List<Direction>();
 
         //muchos if y me sangran los ojos pero me sangra el cerebro tambien, se deberia hacer menos villa....
-        //si las pos no estan ocupadas         
+        //si las pos no estan ocupadas agrego la posible direccion
         if (!PositionOccupied(x + 1, y))
-            //agrego la posible direccion en el sentido que corresponda :D
             possibleDir.Add(Direction.Right);
-        if (!PositionOccupied(x - 1, y))
-            possibleDir.Add(Direction.Left);
         if (!PositionOccupied(x, y + 1))
             possibleDir.Add(Direction.Top);
+        if (!PositionOccupied(x - 1, y))
+            possibleDir.Add(Direction.Left);
         if (!PositionOccupied(x, y - 1))
             possibleDir.Add(Direction.Bottom);
-
         return possibleDir;
     }
 
@@ -155,40 +152,60 @@ public class PipesSim : MonoBehaviour
         float blockRandom = Random.Range(0f, 1f);
         if (blockRandom < blockChance)
         {
-            node.content = Content.Block;
             node.pipe.material = materialBlocked; //le cambio el coloricto asi se que esta bloqueado VIO
+            node.content = Content.Block; //y lo bloqueo
         }
     }
 
-
     void CheckErrors()
     {
-        //eh....nosequehaceraca :3
+        //eh....nosequehaceraca D: 
     }
 
     void Start()
     {
         //Rotamos una pizca luego de agregar todos los pipes
-        //   transform.Rotate(0f, 0f, -5f); no te necesito a ti
+        //transform.Rotate(0f, 0f, -5f); quitate tu 
         visited = new bool[maxWidth, maxHeight];
     }
 
     void StartFill()
     {
         //aca va la corrutina
+        StartCoroutine(Water(_root));
     }
-    IEnumerator Fill(Node start)
+
+    IEnumerator Water(Node start)
     {
         Node currentNode = start;
         Queue<Node> queueNode = new Queue<Node>();
+
         //mientras no este lleno
         while (!_filled)
         {
-            //unity hacelo solo
+            //print("water");
+            //el current tiene mis lagrimas
+            //pd: si lo hacemos con mis lagrimas inundamos unity
+            currentNode.content = Content.Tears;
+            //le pongo color a mis lagrimas
+            currentNode.pipe.material = materialTears;
+            //recorro los vecinos del current
+            foreach (var node in currentNode.neighbours)
+            {
+                //le pregunto si ya esta lleno o si esta bloqueado. Es MUY parecido a lo que hicimos en IA I, se me ilumino la mente
+                if (node.content == Content.Tears || node.content == Content.Block) //si alguno da true va al siguente nodo
+                    continue;
+                //sino buenu lo agrego a la cola 
+                queueNode.Enqueue(node);
+            }
+
+            //si la cola no esta vacia
+            if (queueNode.Count > 0)
+                currentNode = queueNode.Dequeue();
+            else break;
+
+            //lo que tarda
             yield return new WaitForSeconds(fillDelaySeconds);
-            //en mi cabeza funciona algo como esto
-            //recorro los vecinitos del current node yyy  si esta bloqueado sigo but..no se
-            //si termino salgo de aca asi no loopea infinitamente 
         }
     }
 
@@ -201,7 +218,7 @@ public class PipesSim : MonoBehaviour
         }
         else if (Input.GetMouseButtonDown(1))
         {
-            //bancala un toque que ya lo voy a sacar a esto
+            StartFill();
         }
     }
 }
